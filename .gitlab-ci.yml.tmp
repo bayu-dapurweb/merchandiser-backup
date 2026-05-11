@@ -1,0 +1,20 @@
+before_script:
+  - 'which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )'
+  - eval $(ssh-agent -s)
+  - ssh-add <(echo "$SSH_PRIVATE_KEY")
+  - mkdir -p ~/.ssh
+  - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
+  - echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+  - chmod 644 ~/.ssh/known_hosts
+
+stages:
+  - deploy
+
+deploy_beta:
+ stage: deploy
+ only:
+   - beta
+ environment: staging
+ script:
+   - ssh -v -p 2022 root@dotcomsolution.co.id "cd /home/dotco344/public_html/beta4/sinergia && git pull git@gitlab.com:itpelangi1/sinergia.git && git checkout beta && /opt/cpanel/ea-php72/root/usr/bin/php /usr/local/bin/composer install && /opt/cpanel/ea-php72/root/usr/bin/php artisan migrate"
+   - echo "Changes pushed to beta."

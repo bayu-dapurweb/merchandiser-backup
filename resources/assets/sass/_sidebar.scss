@@ -1,0 +1,157 @@
+.sidebar{
+    position: fixed;
+    left: -20rem;
+    top:0;
+    bottom: 0;
+    width: 300px;
+    background-color: #FFF;
+    z-index: 11;
+    transition: all 0.8s ease;
+    overflow-x: auto;
+    &.is-active{
+        left:0;
+        transform: translate(0%, 0);
+    }
+}
+.pita-logo{
+    background-color: #F7F7F7;
+    padding: 15px 15px;
+    @include border-rad(3px);
+    img{
+        width: 120px;
+        height: 30px;
+        object-fit: contain;
+    }
+}
+.media-profile-sidebar{
+    img{
+        width: 75px;
+        height: 75px;
+        object-fit: contain;
+        @include border-rad(50%);
+    }
+    .media-body{
+        font-family: 'Roboto', sans-serif;
+        h5{
+            font-weight:500;
+            font-size: 16px;
+            color: #000;
+            margin-bottom: 3px;
+        }
+        .link-view-profile{
+            font-weight: 300;
+            font-size:14;
+            transition: all 0.3s ease;
+            a{
+                color: #207868;
+                &:hover{
+                    &#profile{
+                        i{
+                            margin-left: 5px;
+                            transform: translate(0%, 0);
+                        }
+                    }
+                    &#back{
+                        i{
+                            margin-right: 5px;
+                            transform: translate(0%, 0);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+.menu-sidebar{
+    li{
+        margin-bottom: 5px;
+        a{
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: start;
+            color: #434343;
+            padding: 8px 25px;
+            @include border-rad(10px);
+            img{
+                margin-right: 10px;
+                width: 25.2px;
+                height: 25.2px;
+                object-fit: contain;
+                &.icon-menu-dark{
+                    display: block;
+                }
+                &.icon-menu-green{
+                    display: none;
+                }
+            }
+            &:hover, &.active{
+                background-color: #E7F9F5;
+                color: #547D76;
+                img{
+                    &.icon-menu-green{
+                        display: block;
+                    }
+                    &.icon-menu-dark{
+                        display: none;
+                    }
+                }
+            }
+        }
+    }
+}
+.help{
+    background-color: #F1F4F4;
+    font-family: 'Roboto', sans-serif;
+    font-weight: 400;
+    font-size: 13px;
+    color: #00957A;
+    padding: 15px;
+    @include border-rad(10px);
+    a{
+        color: #00957A;
+    }
+    img{
+        width: 28px;
+        height: 28px;
+        object-fit: contain;
+        margin-right: 15px;
+    }
+}
+.close-sidebar{
+    background-color: transparent;
+    border: none;
+    width: 18px;
+    height: 30px;
+    float: right;
+    padding: 0;
+    margin-right: 1.5em;
+    margin-top: 11px;
+    img{
+        width: 16px;
+        height: 16px;
+        object-fit: contain;
+    }
+}
+.backdrop{
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 10;
+    width: 100vw;
+    bottom: 0;
+    background-color:rgba(0,0,0,0.5);
+    display: none;
+    &.is-active{
+        display: block;
+    }
+}
+.padding-bottom-3px{
+    padding-bottom: 3px !important;
+}
+.back-from-profile{
+    padding: 16px 10px 16px 0px;
+}
+.berger-menu{
+    background: transparent;border: 0;
+}

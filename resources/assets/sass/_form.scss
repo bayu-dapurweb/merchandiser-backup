@@ -1,0 +1,271 @@
+/* Change the white to any color */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active
+{
+ -webkit-box-shadow: 0 0 0 30px white inset !important;
+}
+.input-group-login{
+    border-bottom: 1px solid #E5E5E5;
+    .input-group-prepend{
+        padding-left: 10px;
+        padding-right: 13px;
+        img{
+            width: 19px;
+            height: 38px;
+            object-fit: contain;
+        }
+    }
+    .text-input{
+        border:none;
+        @include bordered-left(#E5E5E5, 1px);
+        background-color: none;
+        font-size: 16px;
+        font-family: 'Roboto', sans-serif;
+        font-weight: 300;
+        &::placeholder{
+            color: #787878;
+        }
+        
+    }
+}
+.input-group-search{
+    border: 1px solid #E5E5E5;
+    @include border-rad(10px 10px 10px 10px);
+    .input-group-prepend{
+        padding-left: 0.8rem;
+        img{
+            width: 18.5px;
+            height: 18.5px;
+            object-fit: contain;
+        }
+    }
+    .text-search{
+        font-family: 'Roboto', sans-serif;
+        font-weight: normal;
+        font-size: 14px;
+        color: #000;
+        border: none;
+        &::placeholder{
+            color: #B1B1B1;
+        }
+    }
+    .btn-search{
+        font-family: 'Roboto', sans-serif;
+        font-weight: 500;
+        font-size: 14px;
+        padding: 10.5px 28px;
+        @include bordered(#207868, 1px);
+        @include border-rad(0px 10px 10px 0px);
+    }
+}
+// ========button=========//
+.btn-login{
+    font-family: 'Roboto', sans-serif;
+    font-weight: 500;
+    font-size: 16px;
+    padding: 10px 10px;
+    @include border-rad(10px);
+}
+
+.btn-hijau{
+    background-color: #207868;
+    color:#fff;
+    &:focus{
+        color:#fff;
+    }
+}
+.btn-gray{
+    background-color: #A5A5A5;
+    color:#fff;
+    &:focus{
+        color:#fff;
+    }
+}
+.btn-next{
+    display: block;
+}
+.btn-start{
+    display: none;
+}
+.btn-transparent-line-hijau{
+    background: transparent;
+    @include bordered(#207868, 1px);
+    color:#207868;
+}
+.btn-transparent{
+    background: transparent;
+    border: none;
+}
+.btn-next-start{
+    font-family: 'Roboto', sans-serif;
+    font-weight: 500;
+    font-size: 16px;
+    @include border-rad(10px);
+    padding: 13px 10px;
+    width: 130px;
+}
+.btn-signature{
+    font-family: 'Roboto', sans-serif;
+    font-weight: 500;
+    font-size: 15px;
+    @include border-rad(10px);
+    padding: 7px 10px;
+    width: 110px;
+}
+.btn-edit{
+    font-family: 'Roboto', sans-serif;
+    font-weight: 400;
+    font-size: 14px;
+    padding: 13px 10px;
+    @include border-rad(10px);
+}
+.btn-tambah{
+    font-family: 'Roboto', sans-serif;
+    font-weight: 500;
+    font-size: 16px;
+    color: #207868;
+    width: 156px;
+    display: flex;
+    justify-content: start;
+    align-items: center;
+    img{
+        width: 26px !important;
+        height: 26px;
+        object-fit: contain;
+        margin-right: 10px;
+    }
+}
+.btn-confirm{
+    font-family: 'Roboto', sans-serif;
+    font-weight: 500;
+    font-size: 16px;
+    padding: 13px;
+    width: 169px;
+    @include border-rad(10px);
+}
+//============== end button===========//
+.box-form{
+    .title-form{
+        @include bordered-bottom(#E5E5E5, 1px);
+        padding: 10px 15px;
+        color: #000;
+        font-family: 'Roboto', sans-serif;
+        img{
+            width: 24px;
+            height: 24px;
+            object-fit: contain;
+            margin-right: 10px;
+        }
+        h3{
+            margin-bottom: 0;
+        }
+        &.border-botom-0{
+            border-bottom: 0;
+        }
+    }
+    .desc-form{
+        font-family: 'Roboto', sans-serif;
+        font-weight: 300;
+        color: #535353;
+        font-size: 14px;
+    }
+}
+.label-input{
+    font-family: 'Roboto', sans-serif;
+    font-size: 15px;
+    color: #000;
+    font-weight: 400;
+    padding-left: 2px;
+    margin-bottom: 5px;
+    &.sign{
+        font-size: 14px;
+    }
+}
+.text-form{
+    @include bordered(#E5E5E5, 1px);
+    background-color: #fff;
+    @include border-rad(10px);
+    font-size: 15px;
+    font-family: 'Roboto', sans-serif;
+    font-weight: normal;
+    color: #535353;
+    height: 49px;
+    &::placeholder{
+        color: #CECECE;
+    }
+    &.success{
+        @include bordered(#18A795, 1px);
+    }
+    &.error{
+        @include bordered(#FF0000, 1px);
+    }
+}
+.select-form{
+    height: 49px;
+    @include bordered(#E5E5E5, 1px);
+    @include border-rad(10px);
+    font-size: 15px;
+    font-family: 'Roboto', sans-serif;
+    font-weight: normal;
+    color: #535353;
+    &.success{
+        @include bordered(#18A795, 1px);
+    }
+    &.error{
+        @include bordered(#FF0000, 1px);
+    }
+}
+.error{
+    font-family: 'Roboto', sans-serif;
+    font-weight: 300;
+    font-size: 12px;
+    color: #FF0000;
+}
+.box-btn-next{
+    background-color: #F5F5F5;
+    padding: 20px 30px;
+}
+.box-btn-submit{
+    background-color:#fff;
+    padding: 20px 30px;
+}
+.box-upload{
+    padding: 15px;
+    @include bordered(#E5E5E5, 1px);
+    @include border-rad(10px);
+    p{
+        font-family: 'Roboto', sans-serif;
+        font-weight: 300;
+        font-size: 13px;
+        color: #A5A5A5;
+        margin-bottom: 10px;
+    }
+}
+.no-img-view{
+    border: 1px dashed #BDBDBD;
+    @include border-rad(10px);
+    height: 88px;
+    img{
+        &.no-img{
+            width: 37px;
+            height: 33px;
+            object-fit: contain;
+            display: block;
+        }
+        &.view-img{
+            width: 100%;
+            object-fit: cover;
+            height: 88px;
+            display: none;
+        }
+    }
+}
+.btn-upload{
+    font-family: 'Roboto', sans-serif;
+    font-weight: 500;
+    font-size: 13px;
+    padding: 5px 15px;
+    @include border-rad(100px);
+}

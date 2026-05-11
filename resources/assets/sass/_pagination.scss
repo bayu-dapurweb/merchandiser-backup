@@ -1,0 +1,37 @@
+.pagination{
+    li{
+        font-family: "Open Sans", sans-serif;
+        padding: 0 5px;
+        font-weight: 400;
+        a{
+            background-color: transparent;
+            color: #000;
+            display: block;
+            font-size: 13px;
+            padding: 7px 5px;
+            text-align: center;
+            display: block;
+            width: 35px;
+            height: 35px;
+            &.prev,&.next{
+                border: none;
+            }
+        }
+        &.page{
+            a{
+                &.active,&:hover{
+                    background-color: #79A71E;
+                    color: #fff;
+                    @include border-rad(90%);
+                }
+            }
+        }
+        &.prev-arrow{
+            img{
+                transform: rotate(180deg);
+            }
+            
+        }
+        
+    }
+}

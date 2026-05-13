@@ -3,13 +3,13 @@
 /public/storage
 /public/uploads
 /storage/*.key
+# Track crudbooster changes
+!vendor/crocodicstudio/crudbooster/
 /vendor
 /.idea
 /.vscode
 /.vagrant
 Homestead.json
-# Track crudbooster changes
-!vendor/crocodicstudio/crudbooster/
 Homestead.yaml
 npm-debug.log
 yarn-error.log

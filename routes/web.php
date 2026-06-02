@@ -132,4 +132,4 @@ HTML;
         $msg .= "Missing stores (not mapped): $missingStoresList<br>";
     }
     return $msg;
-});
+})->middleware('\crocodicstudio\crudbooster\middlewares\CBBackend');

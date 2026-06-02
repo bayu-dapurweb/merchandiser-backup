@@ -28,6 +28,12 @@ return [
 
     'UPLOAD_TYPES' => 'jpg,png,jpeg,gif,bmp,pdf,xls,xlsx,doc,docx,txt,zip,rar,7z',
 
+    // Toggle postDataQuery allowlist feature via .env (CB_DATA_QUERY_ALLOWLIST_ENABLED).
+    'DATA_QUERY_ALLOWLIST_ENABLED' => env('CB_DATA_QUERY_ALLOWLIST_ENABLED', false),
+
+    // Leave empty to block postDataQuery. Add allowed table names explicitly.
+    'DATA_QUERY_ALLOWLIST_TABLES' => ['cms_users'],
+
     'DEFAULT_THUMBNAIL_WIDTH' => 0,
 
     'DEFEAULT_UPLOAD_MAX_SIZE' => 1000, //in KB

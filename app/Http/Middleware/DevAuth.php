@@ -15,29 +15,20 @@ class DevAuth
      */
     public function handle($request, Closure $next)
     {
-        return $next($request);
+        // Keep developer routes frictionless in local/testing only.
+        if (app()->environment(['local', 'testing'])) {
+            return $next($request);
+        }
 
-        // $dev = \Session::get("developer");        
-        
-        // $host = "sinergiacademy.com";
+        if ((string) session('developer') === 'yes') {
+            return $next($request);
+        }
 
-        // $ip = $request->ip();
+        $allowedIps = array_filter(array_map('trim', explode(',', (string) env('DEV_AUTH_ALLOWED_IPS', ''))));
+        if (!empty($allowedIps) && in_array($request->ip(), $allowedIps, true)) {
+            return $next($request);
+        }
 
-        // if ($ip == "178.128.29.139") {
-        //     return $next($request);
-        // }
-        
-        // if (!empty($_SERVER['SERVER_NAME']) 
-        //     && (
-        //         $_SERVER['SERVER_NAME'] == "$host" 
-        //     ) 
-        //     && $dev != "yes"            
-        //     && $_SERVER['REQUEST_URI'] != "/password"
-        // ) {
-        //     return response()->view("web/devpass");
-        //     // route("get.dev.password");
-        // } else {
-        //     return $next($request);
-        // }
+        abort(403, 'Developer access is restricted.');
     }
 }

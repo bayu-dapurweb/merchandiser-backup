@@ -16,6 +16,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Support\Rbac;
 use App\Http\Controllers\Elvista\ElvistaController;
 use App\Http\Controllers\Elvista\PaymentController;
 use App\Http\Controllers\Elvista\MudikController;
@@ -65,19 +66,30 @@ HTML;
     $userCount = 0;
     $missingBranches = [];
     $missingStores = [];
+    $invalidRoles = [];
     $now = date('Y-m-d H:i:s');
 
     while (($row = fgetcsv($handle)) !== false) {
         $data = array_combine($header, $row);
 
+        $userPayload = [
+            'name' => $data['Nama'],
+            'status' => 'Active',
+        ];
+
+        $privilegeId = Rbac::resolveImportPrivilegeId($data['Role ID'] ?? null);
+        if ($privilegeId !== null) {
+            $userPayload['id_cms_privileges'] = $privilegeId;
+        } elseif (!Rbac::isEnabled()) {
+            $userPayload['id_cms_privileges'] = $data['Role ID'];
+        } else {
+            $invalidRoles[$data['Role ID'] ?? ''] = true;
+        }
+
         // Insert or update user
         DB::table('cms_users')->updateOrInsert(
             ['email' => $data['Email']],
-            [
-                'name' => $data['Nama'],
-                'id_cms_privileges' => $data['Role ID'],
-                'status' => 'Active',
-            ]
+            $userPayload
         );
         $user = DB::table('cms_users')->where('email', $data['Email'])->first();
 
@@ -123,8 +135,12 @@ HTML;
 
     $missingBranchesList = implode(', ', array_keys($missingBranches));
     $missingStoresList = implode(', ', array_keys($missingStores));
+    $invalidRolesList = implode(', ', array_filter(array_keys($invalidRoles), 'strlen'));
 
     $msg = "Imported $userCount users from uploaded CSV.<br>";
+    if ($invalidRolesList) {
+        $msg .= "Invalid role IDs (privilege not updated): $invalidRolesList<br>";
+    }
     if ($missingBranchesList) {
         $msg .= "Missing branches (not mapped): $missingBranchesList<br>";
     }

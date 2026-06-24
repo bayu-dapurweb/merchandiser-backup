@@ -4,6 +4,7 @@ use Session;
 use Request;
 use DB;
 use CRUDbooster;
+use App\Support\Rbac;
 use Illuminate\Support\Facades\Validator;
 
 class AdminCmsUsersController extends \crocodicstudio\crudbooster\controllers\CBController {
@@ -82,6 +83,32 @@ class AdminCmsUsersController extends \crocodicstudio\crudbooster\controllers\CB
 				
 	}
 
+	private function applyRoleFieldVisibility($targetUserId = null): void
+	{
+		if (!Rbac::shouldHideRoleField($targetUserId)) {
+			return;
+		}
+
+		$this->hide_form = array_values(array_unique(array_merge(
+			(array) $this->hide_form,
+			['id_cms_privileges']
+		)));
+	}
+
+	public function getAdd()
+	{
+		$this->applyRoleFieldVisibility();
+
+		return parent::getAdd();
+	}
+
+	public function getEdit($id)
+	{
+		$this->applyRoleFieldVisibility($id);
+
+		return parent::getEdit($id);
+	}
+
 	public function getProfile() {			
 
 		$this->button_addmore = FALSE;
@@ -89,6 +116,7 @@ class AdminCmsUsersController extends \crocodicstudio\crudbooster\controllers\CB
 		$this->button_show    = FALSE;			
 		$this->button_add     = FALSE;
 		$this->button_delete  = FALSE;	
+		// Profile is always self-edit; never show role assignment here.
 		$this->hide_form 	  = ['id_cms_privileges'];
 
 		$data['page_title'] = trans("crudbooster.label_button_profile");
@@ -107,6 +135,8 @@ class AdminCmsUsersController extends \crocodicstudio\crudbooster\controllers\CB
 		$this->cbView('crudbooster::default.form',$data);				
 	}
 	public function hook_before_edit(&$postdata,$id) { 
+		Rbac::guardUserPrivilegeOnEdit($postdata, $id, \CB::me());
+
 		// Validate password strength if password is being changed
 		$isForceRedirectEnabled = filter_var(env('FORCE_MUST_RESET_PASSWORD_REDIRECT', false), FILTER_VALIDATE_BOOLEAN);
 		$plainPassword = Request::input('password');
@@ -151,6 +181,8 @@ class AdminCmsUsersController extends \crocodicstudio\crudbooster\controllers\CB
 		}
 	}
 	public function hook_before_add(&$postdata) {
+		Rbac::guardUserPrivilegeOnAdd($postdata, \CB::me());
+
 		// Validate password strength for new users
 		$isForceRedirectEnabled = filter_var(env('FORCE_MUST_RESET_PASSWORD_REDIRECT', false), FILTER_VALIDATE_BOOLEAN);
 		$plainPassword = Request::input('password');

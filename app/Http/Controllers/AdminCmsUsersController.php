@@ -27,7 +27,14 @@ class AdminCmsUsersController extends \crocodicstudio\crudbooster\controllers\CB
 		$this->col[] = array("label"=>"Name","name"=>"name");
 		$this->col[] = array("label"=>"Email","name"=>"email");
 		$this->col[] = array("label"=>"Privilege","name"=>"id_cms_privileges","callback" => function($data){
-			return \DB::table('cms_privileges')->find($data->id_cms_privileges)->name;
+			$privilege = \DB::table('cms_privileges')->find($data->id_cms_privileges);
+			if (!$privilege) {
+				return 'Unknown Role';
+			}
+			if (Rbac::isEnabled() && !empty($privilege->slug)) {
+				return $privilege->name . ' [' . $privilege->slug . ']';
+			}
+			return $privilege->name;
 		});
 		// $this->col[] = array("label"=>"Ticket Category","name"=>"tiket_categories_id", "join" => "tiket_categories,title");
 		$this->col[] = array("label"=>"Photo","name"=>"photo","image"=>1);		

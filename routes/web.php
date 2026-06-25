@@ -77,13 +77,14 @@ HTML;
             'status' => 'Active',
         ];
 
-        $privilegeId = Rbac::resolveImportPrivilegeId($data['Role ID'] ?? null);
+        $roleKey = $data['Role Slug'] ?? $data['Role ID'] ?? null;
+        $privilegeId = Rbac::resolveImportPrivilegeId($roleKey);
         if ($privilegeId !== null) {
             $userPayload['id_cms_privileges'] = $privilegeId;
         } elseif (!Rbac::isEnabled()) {
             $userPayload['id_cms_privileges'] = $data['Role ID'];
         } else {
-            $invalidRoles[$data['Role ID'] ?? ''] = true;
+            $invalidRoles[$roleKey ?? ''] = true;
         }
 
         // Insert or update user
@@ -139,7 +140,7 @@ HTML;
 
     $msg = "Imported $userCount users from uploaded CSV.<br>";
     if ($invalidRolesList) {
-        $msg .= "Invalid role IDs (privilege not updated): $invalidRolesList<br>";
+        $msg .= "Invalid role IDs/slugs (privilege not updated): $invalidRolesList<br>";
     }
     if ($missingBranchesList) {
         $msg .= "Missing branches (not mapped): $missingBranchesList<br>";

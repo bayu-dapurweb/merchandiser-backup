@@ -14,8 +14,23 @@ class Rbac
 
     public static function isSuperAdmin($user): bool
     {
-        if (!$user || empty($user->id_cms_privileges)) {
+        if (!$user) {
             return false;
+        }
+
+        if ($user instanceof \App\CmsUsers) {
+            return $user->isSuperAdmin();
+        }
+
+        if (empty($user->id_cms_privileges)) {
+            return false;
+        }
+
+        if (self::isEnabled()) {
+            $slug = RoleResolver::slugForPrivilegeId($user->id_cms_privileges);
+            if ($slug === CmsRole::SUPER_ADMIN) {
+                return true;
+            }
         }
 
         $privilege = DB::table('cms_privileges')->where('id', $user->id_cms_privileges)->first();
@@ -61,7 +76,7 @@ class Rbac
             return;
         }
 
-        self::validatePrivilegeIdOrRedirect(
+        self::validatePrivilegeAssignmentOrRedirect(
             $postdata['id_cms_privileges'],
             CRUDBooster::mainpath('edit/' . $targetUserId)
         );
@@ -89,32 +104,41 @@ class Rbac
             );
         }
 
-        self::validatePrivilegeIdOrRedirect($postdata['id_cms_privileges'], CRUDBooster::mainpath('add'));
+        self::validatePrivilegeAssignmentOrRedirect($postdata['id_cms_privileges'], CRUDBooster::mainpath('add'));
     }
 
     /**
-     * Phase 1: validate CSV role IDs before import.
+     * Phase 1/2: validate CSV role by numeric ID or slug.
      *
-     * @return int|null Valid privilege ID, or null when RBAC is enabled and ID is invalid.
+     * @return int|null Valid privilege ID, or null when RBAC is enabled and value is invalid.
      */
-    public static function resolveImportPrivilegeId($roleId)
+    public static function resolveImportPrivilegeId($roleIdOrSlug)
     {
         if (!self::isEnabled()) {
-            return $roleId;
+            return $roleIdOrSlug;
         }
 
-        if (!is_numeric($roleId)) {
-            return null;
-        }
-
-        $id = (int) $roleId;
-
-        return DB::table('cms_privileges')->where('id', $id)->exists() ? $id : null;
+        return RoleResolver::resolvePrivilegeId($roleIdOrSlug);
     }
 
-    private static function validatePrivilegeIdOrRedirect($privilegeId, string $redirectPath): void
+    /**
+     * Phase 2: resolve stable role slugs to privilege IDs for authorization checks.
+     *
+     * @param string[] $slugs
+     * @return int[]
+     */
+    public static function privilegeIdsForRoles(array $slugs): array
     {
-        if (!is_numeric($privilegeId) || !DB::table('cms_privileges')->where('id', (int) $privilegeId)->exists()) {
+        if (!self::isEnabled()) {
+            return [];
+        }
+
+        return RoleResolver::resolvePrivilegeIdsForSlugs($slugs);
+    }
+
+    private static function validatePrivilegeAssignmentOrRedirect($privilegeIdOrSlug, string $redirectPath): void
+    {
+        if (RoleResolver::resolvePrivilegeId($privilegeIdOrSlug) === null) {
             CRUDBooster::redirect($redirectPath, 'Invalid privilege selected.', 'danger');
         }
     }

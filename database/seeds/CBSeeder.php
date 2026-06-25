@@ -286,6 +286,7 @@ class Cms_privilegesSeeder extends Seeder
             DB::table('cms_privileges')->insert([
                 'created_at' => date('Y-m-d H:i:s'),
                 'name' => 'Super Administrator',
+                'slug' => 'super_admin',
                 'is_superadmin' => 1,
                 'theme_color' => 'skin-red',
             ]);

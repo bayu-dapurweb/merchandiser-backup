@@ -7,6 +7,7 @@ use Request;
 use DB;
 use CRUDBooster;
 use Dompdf\Dompdf;
+use App\Services\AuthorizationService;
 
 class AdminTrxPurchaseOrdersApprovedController extends \crocodicstudio\crudbooster\controllers\CBController
 {
@@ -33,7 +34,7 @@ class AdminTrxPurchaseOrdersApprovedController extends \crocodicstudio\crudboost
 		$this->table = "trx_purchase_orders";
 		$me = \CB::me();
 
-		if ($me->id_cms_privileges != 1) {
+		if (AuthorizationService::denies($me, 'super_admin_only')) {
 			$this->button_add = false;
 			$this->button_delete = false;
 		}
@@ -236,7 +237,7 @@ class AdminTrxPurchaseOrdersApprovedController extends \crocodicstudio\crudboost
 		// $this->form[] = ['label'=>'Disc. Sum','name'=>'DiscSum','type'=>'money','validation'=>'required|integer|min:0','width'=>'col-sm-10'];
 		// $this->form[] = ['label'=>'Doc. Total','name'=>'DocTotal','type'=>'money','validation'=>'required|integer|min:0','width'=>'col-sm-10'];
 		$me = \CB::me();
-		if ($me->id_cms_privileges == 5) {
+		if (AuthorizationService::isMerchandiser($me)) {
 			$status_enum = 'rejected|Rejected;approved|Approved';
 		} else {
 			$status_enum = 'draft|Save as Draft;submited|Submit and Sync';
@@ -292,10 +293,8 @@ class AdminTrxPurchaseOrdersApprovedController extends \crocodicstudio\crudboost
 	        |
 	        */
 
-        $crudPrivileges = [1, 6, 7, 8];
-        $approvePrivileges = [1, 7];
 		$this->addaction = array();
-        if (in_array($me->id_cms_privileges, $crudPrivileges)) {
+        if (AuthorizationService::allows($me, 'transaction_crud')) {
             $this->addaction[] = [
                 'label' => 'Sync History',
                 'url' => uri('admin/log_api_calls?related_module=trx_purchase_orders&related_reff_id=[id]'),
@@ -319,7 +318,7 @@ class AdminTrxPurchaseOrdersApprovedController extends \crocodicstudio\crudboost
             ];
 
         }
-        if ($me->id_cms_privileges == 1){
+        if (AuthorizationService::isSuperAdmin($me)){
             $this->addaction[] = [
                 'label' => 'Set As Synced',
                 'url' => \CB::mainpath() . '/marksynced/[id]',

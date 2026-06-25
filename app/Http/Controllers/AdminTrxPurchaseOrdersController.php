@@ -7,6 +7,7 @@ use Request;
 use DB;
 use CRUDBooster;
 use Dompdf\Dompdf;
+use App\Services\AuthorizationService;
 
 class AdminTrxPurchaseOrdersController extends \crocodicstudio\crudbooster\controllers\CBController
 {
@@ -33,23 +34,15 @@ class AdminTrxPurchaseOrdersController extends \crocodicstudio\crudbooster\contr
 		$this->table = "trx_purchase_orders";
 		$me = \CB::me();
 
-		// Privilege definitions
-		$createPrivileges = [1, 7];
-		$viewPrivileges = [1, 6, 7, 8];
-		$editPrivileges = [1, 7];
-		$deletePrivileges = [1, 7];
-		$approvePrivileges = [1, 7];
-
-		// Apply privilege restrictions
-		if (!in_array($me->id_cms_privileges, $createPrivileges)) {
+		if (AuthorizationService::denies($me, 'purchase_order_create')) {
 			$this->button_add = false;
 		}
 
-		if (!in_array($me->id_cms_privileges, $editPrivileges)) {
+		if (AuthorizationService::denies($me, 'purchase_order_edit')) {
 			$this->button_edit = false;
 		}
 
-		if (!in_array($me->id_cms_privileges, $deletePrivileges)) {
+		if (AuthorizationService::denies($me, 'purchase_order_delete')) {
 			$this->button_delete = false;
 		}
 
@@ -137,14 +130,10 @@ class AdminTrxPurchaseOrdersController extends \crocodicstudio\crudbooster\contr
 
 		# START FORM DO NOT REMOVE THIS LINE
 
-		$createPrivileges = [1, 7];
-		$viewPrivileges = [1, 6, 7, 8];
-		$editPrivileges = [1, 7];
-		$approvePrivileges = [1, 7];
-		$myprivilage = \CB::me()->id_cms_privileges;
+		$me = \CB::me();
 
 		// Check if user has view privileges
-		if (!in_array($myprivilage, $viewPrivileges)) {
+		if (AuthorizationService::denies($me, 'transaction_view')) {
 			$is_viewonly = true;
 		} else {
 			// For edit mode, check edit privileges and ownership/status
@@ -157,7 +146,7 @@ class AdminTrxPurchaseOrdersController extends \crocodicstudio\crudbooster\contr
 						$is_viewonly = true;
 					}
 					// Approvers can edit submitted records
-					else if ($po->doc_status === 'submited' && in_array($myprivilage, $approvePrivileges)) {
+					else if ($po->doc_status === 'submited' && AuthorizationService::allows($me, 'purchase_order_approve')) {
 						$is_viewonly = false;
 					}
 					// Users can only edit their own draft or rejected records
@@ -178,7 +167,7 @@ class AdminTrxPurchaseOrdersController extends \crocodicstudio\crudbooster\contr
 		$fields_readonly = false;
 		if (!empty(Request::segment(4))) {
 			$po = \App\TrxPurchaseOrders::find(Request::segment(4));
-			if ($po && $po->doc_status === 'submited' && in_array($myprivilage, $approvePrivileges)) {
+			if ($po && $po->doc_status === 'submited' && AuthorizationService::allows($me, 'purchase_order_approve')) {
 				$fields_readonly = true;
 			}
 		}
@@ -216,7 +205,7 @@ class AdminTrxPurchaseOrdersController extends \crocodicstudio\crudbooster\contr
 		// $this->form[] = ['label'=>'Doc. Total','name'=>'DocTotal','type'=>'money','validation'=>'required|integer|min:0','width'=>'col-sm-10'];
 		$me = \CB::me();
 		// Only users with approve privileges can approve/reject
-		if (in_array($me->id_cms_privileges, $approvePrivileges)) {
+		if (AuthorizationService::allows($me, 'purchase_order_approve')) {
 			// For new records (add mode) or draft status, show creator options
 			if (empty(Request::segment(4))) {
 				// Add mode - show creator options
@@ -298,7 +287,7 @@ class AdminTrxPurchaseOrdersController extends \crocodicstudio\crudbooster\contr
 		//     // 'showIf' => "[doc_status] == 'submited'"
 		// ];
 
-		if (in_array($me->id_cms_privileges, $approvePrivileges)) {
+		if (AuthorizationService::allows($me, 'purchase_order_approve')) {
 			$this->addaction[] = [
 				'label' => 'Verification',
 				'url' => \CB::mainpath() . '/verification/[id]',
@@ -329,7 +318,7 @@ class AdminTrxPurchaseOrdersController extends \crocodicstudio\crudbooster\contr
 		$this->button_selected = array();
 
 		// Add bulk approve button for users with approve privileges
-		if (in_array($me->id_cms_privileges, $approvePrivileges)) {
+		if (AuthorizationService::allows($me, 'purchase_order_approve')) {
 			$this->button_selected[] = [
 				'label' => 'Bulk Approve',
 				'icon' => 'fa fa-check',
@@ -524,10 +513,8 @@ class AdminTrxPurchaseOrdersController extends \crocodicstudio\crudbooster\contr
 		//Your code here
 		if ($button_name == 'bulk_approve') {
 			$me = \CB::me();
-			$approvePrivileges = [1, 7];
 
-			// Check if user has approve privileges
-			if (!in_array($me->id_cms_privileges, $approvePrivileges)) {
+			if (AuthorizationService::denies($me, 'purchase_order_approve')) {
 				\CB::redirect(CRUDBooster::mainpath(), "You don't have permission to approve records!", "warning");
 				return;
 			}
@@ -679,16 +666,8 @@ class AdminTrxPurchaseOrdersController extends \crocodicstudio\crudbooster\contr
 	{
 		//Your code here
 		$me = \CB::me();
-		$viewPrivileges = [1, 6, 7, 8];
-		$approvePrivileges = [1, 7];
 
-		// Only show records if user has view privileges
-//		if (!in_array($me->id_cms_privileges, $viewPrivileges)) {
-//			$query->where('1', '0'); // Show no records
-//			return;
-//		}
-
-		if (in_array($me->id_cms_privileges, $approvePrivileges)) {
+		if (AuthorizationService::allows($me, 'purchase_order_approve')) {
 			// Approvers can see:
 			// 1. All submitted records (for approval)
 			// 2. Their own draft and rejected records
@@ -699,8 +678,6 @@ class AdminTrxPurchaseOrdersController extends \crocodicstudio\crudbooster\contr
 							->where("trx_purchase_orders.created_by", $me->id);
 					});
 			});
-		} else if ($me->id_cms_privileges == 1 || $me->id_cms_privileges == 7) {
-			$query->whereIn("trx_purchase_orders.doc_status", ["submited", "draft", "rejected"]);
 		} else {
 			$query->where("trx_purchase_orders.doc_status", "!=", "approved");
 		}
@@ -1053,10 +1030,8 @@ class AdminTrxPurchaseOrdersController extends \crocodicstudio\crudbooster\contr
 	{
 		//Your code here
 		$me = \CB::me();
-		$deletePrivileges = [1, 7];
 
-		// Check if user has delete privileges
-		if (!in_array($me->id_cms_privileges, $deletePrivileges)) {
+		if (AuthorizationService::denies($me, 'purchase_order_delete')) {
 			\CB::redirect(CRUDBooster::mainpath(), "You don't have permission to delete this record!", "warning");
 			exit;
 		}

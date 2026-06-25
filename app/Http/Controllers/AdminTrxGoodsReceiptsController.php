@@ -7,6 +7,7 @@ use Request;
 use DB;
 use CRUDBooster;
 use Dompdf\Dompdf;
+use App\Services\AuthorizationService;
 use Illuminate\Support\Facades\Log;
 
 class AdminTrxGoodsReceiptsController extends \crocodicstudio\crudbooster\controllers\CBController
@@ -33,23 +34,15 @@ class AdminTrxGoodsReceiptsController extends \crocodicstudio\crudbooster\contro
 		$this->button_export = false;
 		$me = \CB::me();
 
-		// Privilege definitions
-		$createPrivileges = [1, 6, 7, 8];
-		$viewPrivileges = [1, 6, 7, 8];
-		$editPrivileges = [1, 6, 7, 8];
-		$deletePrivileges = [1, 6, 7, 8];
-		$approvePrivileges = [1, 7, 6];
-
-		// Apply privilege restrictions
-		if (!in_array($me->id_cms_privileges, $createPrivileges)) {
+		if (AuthorizationService::denies($me, 'transaction_crud')) {
 			$this->button_add = false;
 		}
 
-		if (!in_array($me->id_cms_privileges, $editPrivileges)) {
+		if (AuthorizationService::denies($me, 'transaction_crud')) {
 			$this->button_edit = false;
 		}
 
-		if (!in_array($me->id_cms_privileges, $deletePrivileges)) {
+		if (AuthorizationService::denies($me, 'transaction_crud')) {
 			$this->button_delete = false;
 		}
 
@@ -188,10 +181,9 @@ class AdminTrxGoodsReceiptsController extends \crocodicstudio\crudbooster\contro
 
 		# START FORM DO NOT REMOVE THIS LINE
 
-		$myprivilage = \CB::me()->id_cms_privileges;
+		$me = \CB::me();
 
-		// Check if user has view privileges
-		if (!in_array($myprivilage, $viewPrivileges)) {
+		if (AuthorizationService::denies($me, 'transaction_view')) {
 			$is_viewonly = true;
 		} else {
 			// For edit mode, check edit privileges and ownership/status
@@ -204,7 +196,7 @@ class AdminTrxGoodsReceiptsController extends \crocodicstudio\crudbooster\contro
 						$is_viewonly = true;
 					}
 					// Approvers can edit submitted records
-					else if ($gr->doc_status == 'submited' && in_array($myprivilage, $approvePrivileges)) {
+					else if ($gr->doc_status == 'submited' && AuthorizationService::allows($me, 'goods_receipt_approve')) {
 						$is_viewonly = false;
 					}
 					// Users can only edit their own draft or rejected records
@@ -228,7 +220,7 @@ class AdminTrxGoodsReceiptsController extends \crocodicstudio\crudbooster\contro
 		$fields_readonly = false;
 		if (!empty(Request::segment(4))) {
 			$gr = \App\TrxGoodsReceipts::find(Request::segment(4));
-			if ($gr && $gr->doc_status === 'submited' && in_array($myprivilage, $approvePrivileges)) {
+			if ($gr && $gr->doc_status === 'submited' && AuthorizationService::allows($me, 'goods_receipt_approve')) {
 				$fields_readonly = true;
 			}
 		}
@@ -268,7 +260,7 @@ class AdminTrxGoodsReceiptsController extends \crocodicstudio\crudbooster\contro
 		// $this->form[] = ['label'=>'U SOL RAV TRID','name'=>'U_SOL_RAV_TRID','type'=>'text','validation'=>'required|min:1|max:255','width'=>'col-sm-10'];
 		$me = \CB::me();
 		// Only users with approve privileges can approve/reject
-		if (in_array($me->id_cms_privileges, $approvePrivileges)) {
+		if (AuthorizationService::allows($me, 'goods_receipt_approve')) {
 			// For new records (add mode) or draft status, show creator options
 			if (empty(Request::segment(4))) {
 				// Add mode - show creator options
@@ -341,9 +333,8 @@ class AdminTrxGoodsReceiptsController extends \crocodicstudio\crudbooster\contro
 	        |
 	        */
 
-        $crudPrivileges = [1, 6, 7, 8];
 		$this->addaction = array();
-        if (in_array($me->id_cms_privileges, $crudPrivileges)) {
+        if (AuthorizationService::allows($me, 'transaction_crud')) {
             $this->addaction[] = [
                 'label' => 'Sync History',
                 'url' => uri('admin/log_api_calls?related_module=trx_goods_receipts&related_reff_id=[id]'),
@@ -367,7 +358,7 @@ class AdminTrxGoodsReceiptsController extends \crocodicstudio\crudbooster\contro
             ];
         }
 		// Only show verification for approve privileges
-		if (in_array($me->id_cms_privileges, $approvePrivileges)) {
+		if (AuthorizationService::allows($me, 'goods_receipt_approve')) {
 			$this->addaction[] = [
 				'label' => 'Verification',
 				'url' => CRUDBooster::mainpath() . '/edit/[id]',
@@ -386,7 +377,7 @@ class AdminTrxGoodsReceiptsController extends \crocodicstudio\crudbooster\contro
 			// 'showIf' => "[doc_status] == 'submited'"
 		];
 
-        if ($me->id_cms_privileges == 1){
+        if (AuthorizationService::isSuperAdmin($me)){
             $this->addaction[] = [
                 'label' => 'Set As Synced',
                 'url' => \CB::mainpath() . '/marksynced/[id]',
@@ -408,7 +399,7 @@ class AdminTrxGoodsReceiptsController extends \crocodicstudio\crudbooster\contro
 		$this->button_selected = array();
 
 		// Add bulk approve button for users with approve privileges
-		if (in_array($me->id_cms_privileges, $approvePrivileges)) {
+		if (AuthorizationService::allows($me, 'goods_receipt_approve')) {
 			$this->button_selected[] = [
 				'label' => 'Bulk Approve',
 				'icon' => 'fa fa-check',
@@ -621,10 +612,7 @@ class AdminTrxGoodsReceiptsController extends \crocodicstudio\crudbooster\contro
 		//Your code here
 		if ($button_name == 'bulk_approve') {
 			$me = \CB::me();
-			$approvePrivileges = [1, 7];
-
-			// Check if user has approve privileges
-			if (!in_array($me->id_cms_privileges, $approvePrivileges)) {
+			if (AuthorizationService::denies($me, 'goods_receipt_approve_strict')) {
 				\CB::redirect(CRUDBooster::mainpath(), "You don't have permission to approve records!", "warning");
 				return;
 			}
@@ -1003,10 +991,7 @@ class AdminTrxGoodsReceiptsController extends \crocodicstudio\crudbooster\contro
 	{
 		//Your code here
 		$me = \CB::me();
-		$deletePrivileges = [1, 6, 7, 8];
-
-		// Check if user has delete privileges
-		if (!in_array($me->id_cms_privileges, $deletePrivileges)) {
+		if (AuthorizationService::denies($me, 'transaction_crud')) {
 			\CB::redirect(CRUDBooster::mainpath(), "You don't have permission to delete this record!", "warning");
 			exit;
 		}

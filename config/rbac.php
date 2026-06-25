@@ -1,5 +1,7 @@
 <?php
 
+use App\Support\CmsRole;
+
 return [
 
     /*
@@ -41,6 +43,70 @@ return [
         6 => 'store_manager',
         7 => 'approver',
         8 => 'viewer',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Role groups (Phase 3 authorization)
+    |--------------------------------------------------------------------------
+    |
+    | Named groups replace hardcoded privilege ID arrays in controllers.
+    | Keys are stable slugs from cms_privileges.slug (see CmsRole constants).
+    |
+    */
+    'role_groups' => [
+        'super_admin_only' => [
+            CmsRole::SUPER_ADMIN,
+        ],
+        'merchandiser_only' => [
+            CmsRole::MERCHANDISER,
+        ],
+        'transaction_crud' => [
+            CmsRole::SUPER_ADMIN,
+            CmsRole::STORE_MANAGER,
+            CmsRole::APPROVER,
+            CmsRole::VIEWER,
+        ],
+        'transaction_view' => [
+            CmsRole::SUPER_ADMIN,
+            CmsRole::STORE_MANAGER,
+            CmsRole::APPROVER,
+            CmsRole::VIEWER,
+        ],
+        'purchase_order_create' => [
+            CmsRole::SUPER_ADMIN,
+            CmsRole::APPROVER,
+        ],
+        'purchase_order_edit' => [
+            CmsRole::SUPER_ADMIN,
+            CmsRole::APPROVER,
+        ],
+        'purchase_order_delete' => [
+            CmsRole::SUPER_ADMIN,
+            CmsRole::APPROVER,
+        ],
+        'purchase_order_approve' => [
+            CmsRole::SUPER_ADMIN,
+            CmsRole::APPROVER,
+        ],
+        'purchase_request_approve' => [
+            CmsRole::SUPER_ADMIN,
+            CmsRole::APPROVER,
+        ],
+        'goods_receipt_approve' => [
+            CmsRole::SUPER_ADMIN,
+            CmsRole::APPROVER,
+            CmsRole::STORE_MANAGER,
+        ],
+        'goods_receipt_approve_strict' => [
+            CmsRole::SUPER_ADMIN,
+            CmsRole::APPROVER,
+        ],
+        'goods_return_approve' => [
+            CmsRole::SUPER_ADMIN,
+            CmsRole::STORE_MANAGER,
+            CmsRole::APPROVER,
+        ],
     ],
 
 ];

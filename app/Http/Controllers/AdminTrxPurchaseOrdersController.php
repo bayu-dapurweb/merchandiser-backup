@@ -7,7 +7,7 @@ use Request;
 use DB;
 use CRUDBooster;
 use Dompdf\Dompdf;
-use App\Services\AuthorizationService;
+use App\Support\ModulePrivilege;
 
 class AdminTrxPurchaseOrdersController extends \crocodicstudio\crudbooster\controllers\CBController
 {
@@ -32,19 +32,6 @@ class AdminTrxPurchaseOrdersController extends \crocodicstudio\crudbooster\contr
 		$this->button_import = false;
 		$this->button_export = false;
 		$this->table = "trx_purchase_orders";
-		$me = \CB::me();
-
-		if (AuthorizationService::denies($me, 'purchase_order_create')) {
-			$this->button_add = false;
-		}
-
-		if (AuthorizationService::denies($me, 'purchase_order_edit')) {
-			$this->button_edit = false;
-		}
-
-		if (AuthorizationService::denies($me, 'purchase_order_delete')) {
-			$this->button_delete = false;
-		}
 
 		# END CONFIGURATION DO NOT REMOVE THIS LINE
 
@@ -132,31 +119,18 @@ class AdminTrxPurchaseOrdersController extends \crocodicstudio\crudbooster\contr
 
 		$me = \CB::me();
 
-		// Check if user has view privileges
-		if (AuthorizationService::denies($me, 'transaction_view')) {
-			$is_viewonly = true;
-		} else {
-			// For edit mode, check edit privileges and ownership/status
-			$is_viewonly = false;
-			if (!empty(Request::segment(4))) {
-				$po = \App\TrxPurchaseOrders::find(Request::segment(4));
-				if ($po) {
-					// Make approved status view-only for all users
-					if ($po->doc_status === 'approved') {
-						$is_viewonly = true;
-					}
-					// Approvers can edit submitted records
-					else if ($po->doc_status === 'submited' && AuthorizationService::allows($me, 'purchase_order_approve')) {
-						$is_viewonly = false;
-					}
-					// Users can only edit their own draft or rejected records
-					else if (in_array($po->doc_status, ['draft', 'rejected']) && $po->created_by === $me->id) {
-						$is_viewonly = false;
-					}
-					// All other cases are view-only
-					else {
-						$is_viewonly = true;
-					}
+		$is_viewonly = false;
+		if (!empty(Request::segment(4))) {
+			$po = \App\TrxPurchaseOrders::find(Request::segment(4));
+			if ($po) {
+				if ($po->doc_status === 'approved') {
+					$is_viewonly = true;
+				} else if ($po->doc_status === 'submited' && ModulePrivilege::canApprove($me, 'trx_purchase_orders')) {
+					$is_viewonly = false;
+				} else if (in_array($po->doc_status, ['draft', 'rejected']) && $po->created_by === $me->id) {
+					$is_viewonly = false;
+				} else {
+					$is_viewonly = true;
 				}
 			}
 		}
@@ -167,7 +141,7 @@ class AdminTrxPurchaseOrdersController extends \crocodicstudio\crudbooster\contr
 		$fields_readonly = false;
 		if (!empty(Request::segment(4))) {
 			$po = \App\TrxPurchaseOrders::find(Request::segment(4));
-			if ($po && $po->doc_status === 'submited' && AuthorizationService::allows($me, 'purchase_order_approve')) {
+			if ($po && $po->doc_status === 'submited' && ModulePrivilege::canApprove($me, 'trx_purchase_orders')) {
 				$fields_readonly = true;
 			}
 		}
@@ -205,7 +179,7 @@ class AdminTrxPurchaseOrdersController extends \crocodicstudio\crudbooster\contr
 		// $this->form[] = ['label'=>'Doc. Total','name'=>'DocTotal','type'=>'money','validation'=>'required|integer|min:0','width'=>'col-sm-10'];
 		$me = \CB::me();
 		// Only users with approve privileges can approve/reject
-		if (AuthorizationService::allows($me, 'purchase_order_approve')) {
+		if (ModulePrivilege::canApprove($me, 'trx_purchase_orders')) {
 			// For new records (add mode) or draft status, show creator options
 			if (empty(Request::segment(4))) {
 				// Add mode - show creator options
@@ -287,7 +261,7 @@ class AdminTrxPurchaseOrdersController extends \crocodicstudio\crudbooster\contr
 		//     // 'showIf' => "[doc_status] == 'submited'"
 		// ];
 
-		if (AuthorizationService::allows($me, 'purchase_order_approve')) {
+		if (ModulePrivilege::canApprove($me, 'trx_purchase_orders')) {
 			$this->addaction[] = [
 				'label' => 'Verification',
 				'url' => \CB::mainpath() . '/verification/[id]',
@@ -318,7 +292,7 @@ class AdminTrxPurchaseOrdersController extends \crocodicstudio\crudbooster\contr
 		$this->button_selected = array();
 
 		// Add bulk approve button for users with approve privileges
-		if (AuthorizationService::allows($me, 'purchase_order_approve')) {
+		if (ModulePrivilege::canApprove($me, 'trx_purchase_orders')) {
 			$this->button_selected[] = [
 				'label' => 'Bulk Approve',
 				'icon' => 'fa fa-check',
@@ -514,7 +488,7 @@ class AdminTrxPurchaseOrdersController extends \crocodicstudio\crudbooster\contr
 		if ($button_name == 'bulk_approve') {
 			$me = \CB::me();
 
-			if (AuthorizationService::denies($me, 'purchase_order_approve')) {
+			if (ModulePrivilege::deniesApprove($me, 'trx_purchase_orders')) {
 				\CB::redirect(CRUDBooster::mainpath(), "You don't have permission to approve records!", "warning");
 				return;
 			}
@@ -667,7 +641,7 @@ class AdminTrxPurchaseOrdersController extends \crocodicstudio\crudbooster\contr
 		//Your code here
 		$me = \CB::me();
 
-		if (AuthorizationService::allows($me, 'purchase_order_approve')) {
+		if (ModulePrivilege::canApprove($me, 'trx_purchase_orders')) {
 			// Approvers can see:
 			// 1. All submitted records (for approval)
 			// 2. Their own draft and rejected records
@@ -1031,7 +1005,7 @@ class AdminTrxPurchaseOrdersController extends \crocodicstudio\crudbooster\contr
 		//Your code here
 		$me = \CB::me();
 
-		if (AuthorizationService::denies($me, 'purchase_order_delete')) {
+		if (!CRUDBooster::isDelete() && $this->global_privilege == false) {
 			\CB::redirect(CRUDBooster::mainpath(), "You don't have permission to delete this record!", "warning");
 			exit;
 		}

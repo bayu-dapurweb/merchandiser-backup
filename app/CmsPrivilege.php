@@ -19,4 +19,14 @@ class CmsPrivilege extends Model
     {
         return $this->hasMany(CmsUsers::class, 'id_cms_privileges');
     }
+
+    public function permissions()
+    {
+        return $this->belongsToMany(
+            CmsPermission::class,
+            'cms_privilege_permissions',
+            'id_cms_privileges',
+            'id_cms_permissions'
+        )->withTimestamps();
+    }
 }

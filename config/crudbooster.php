@@ -34,6 +34,11 @@ return [
     // Leave empty to block postDataQuery. Add allowed table names explicitly.
     'DATA_QUERY_ALLOWLIST_TABLES' => ['cms_users'],
 
+    // Toggle getUpdateSingle hardening via .env (CB_UPDATE_SINGLE_HARDENING_ENABLED).
+    // true  = restrict to module table + upload/filemanager columns only (recommended).
+    // false = legacy CRUDBooster behavior (arbitrary table/column) — local testing only.
+    'UPDATE_SINGLE_HARDENING_ENABLED' => env('CB_UPDATE_SINGLE_HARDENING_ENABLED', false),
+
     'DEFAULT_THUMBNAIL_WIDTH' => 0,
 
     'DEFEAULT_UPLOAD_MAX_SIZE' => 1000, //in KB

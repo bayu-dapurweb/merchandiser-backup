@@ -4,12 +4,33 @@ namespace App\Support;
 
 use CRUDBooster;
 use DB;
+use Illuminate\Support\Facades\Schema;
 
 class Rbac
 {
     public static function isEnabled(): bool
     {
         return filter_var(config('rbac.enabled'), FILTER_VALIDATE_BOOLEAN);
+    }
+
+    /**
+     * Phase 4: use cms_permissions tables when seeded.
+     */
+    public static function usesDatabasePermissions(): bool
+    {
+        if (!self::isEnabled()) {
+            return false;
+        }
+
+        if (!filter_var(config('rbac.use_database_permissions', true), FILTER_VALIDATE_BOOLEAN)) {
+            return false;
+        }
+
+        if (!Schema::hasTable('cms_permissions') || !Schema::hasTable('cms_privilege_permissions')) {
+            return false;
+        }
+
+        return DB::table('cms_permissions')->count() > 0;
     }
 
     public static function isSuperAdmin($user): bool

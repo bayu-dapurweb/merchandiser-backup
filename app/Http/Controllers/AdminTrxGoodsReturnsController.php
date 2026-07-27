@@ -5,6 +5,7 @@
 	use DB;
 	use CRUDBooster;
 	use Dompdf\Dompdf;
+	use App\Support\ModulePrivilege;
 	use App\Services\AuthorizationService;
 	class AdminTrxGoodsReturnsController extends \crocodicstudio\crudbooster\controllers\CBController {
 
@@ -26,19 +27,6 @@
 			$this->button_filter = true;
 			$this->button_import = false;
 			$this->button_export = false;
-			$me = \CB::me();
-
-			if (AuthorizationService::denies($me, 'transaction_crud')) {
-				$this->button_add = false;
-			}
-
-			if (AuthorizationService::denies($me, 'transaction_crud')) {
-				$this->button_edit = false;
-			}
-
-			if (AuthorizationService::denies($me, 'transaction_crud')) {
-				$this->button_delete = false;
-			}
 
 			$this->table = "trx_goods_returns";
 			# END CONFIGURATION DO NOT REMOVE THIS LINE
@@ -150,30 +138,18 @@
 
 			$me = \CB::me();
 
-			if (AuthorizationService::denies($me, 'transaction_view')) {
-				$is_viewonly = true;
-			} else {
-				// For edit mode, check edit privileges and ownership/status
-				$is_viewonly = false;
-				if (!empty(Request::segment(4))) {
-					$gr = \App\TrxGoodsReturns::find(Request::segment(4));
-					if ($gr) {
-						// Make approved status view-only for all users
-						if ($gr->doc_status === 'approved') {
-							$is_viewonly = true;
-						}
-						// Approvers can edit submitted records
-						else if ($gr->doc_status === 'submited' && AuthorizationService::allows($me, 'goods_return_approve')) {
-							$is_viewonly = false;
-						}
-						// Users can only edit their own draft or rejected records
-						else if (in_array($gr->doc_status, ['draft', 'rejected']) && $gr->created_by === $me->id) {
-							$is_viewonly = false;
-						}
-						// All other cases are view-only
-						else {
-							$is_viewonly = true;
-						}
+			$is_viewonly = false;
+			if (!empty(Request::segment(4))) {
+				$gr = \App\TrxGoodsReturns::find(Request::segment(4));
+				if ($gr) {
+					if ($gr->doc_status === 'approved') {
+						$is_viewonly = true;
+					} else if ($gr->doc_status === 'submited' && ModulePrivilege::canApprove($me, 'trx_goods_returns')) {
+						$is_viewonly = false;
+					} else if (in_array($gr->doc_status, ['draft', 'rejected']) && $gr->created_by === $me->id) {
+						$is_viewonly = false;
+					} else {
+						$is_viewonly = true;
 					}
 				}
 			}
@@ -182,7 +158,7 @@
 			$fields_readonly = false;
 			if (!empty(Request::segment(4))) {
 				$gr = \App\TrxGoodsReturns::find(Request::segment(4));
-				if ($gr && $gr->doc_status === 'submited' && AuthorizationService::allows($me, 'goods_return_approve')) {
+				if ($gr && $gr->doc_status === 'submited' && ModulePrivilege::canApprove($me, 'trx_goods_returns')) {
 					$fields_readonly = true;
 				}
 			}
@@ -223,7 +199,7 @@
 			// $this->form[] = ['label'=>'U SOL RAV TRID','name'=>'U_SOL_RAV_TRID','type'=>'text','validation'=>'required|min:1|max:255','width'=>'col-sm-10'];
 				$me = \CB::me();
 				// Only users with approve privileges can approve/reject
-				if (AuthorizationService::allows($me, 'goods_return_approve')) {
+				if (ModulePrivilege::canApprove($me, 'trx_goods_returns')) {
 					// For new records (add mode) or draft status, show creator options
 					if (empty(Request::segment(4))) {
 						// Add mode - show creator options
@@ -289,7 +265,7 @@
 	        |
 	        */
 	        $this->addaction = array();
-            if (AuthorizationService::allows($me, 'transaction_crud')) {
+            if (CRUDBooster::isUpdate()) {
                 $this->addaction[] = [
                     'label' => 'Sync History',
                     'url' => uri('admin/log_api_calls?related_module=trx_goods_returns&related_reff_id=[id]'),
@@ -305,7 +281,7 @@
                     'showIf' => "[doc_status] == 'approved'"
                 ];
             }
-            if (AuthorizationService::allows($me, 'goods_return_approve')) {
+            if (ModulePrivilege::canApprove($me, 'trx_goods_returns')) {
                 $this->addaction[] = [
                     'label' => 'Verification',
                     'url' => CRUDBooster::mainpath() . '/edit/[id]',
@@ -337,7 +313,7 @@
 	        $this->button_selected = array();
 
 	        // Add bulk approve button for users with approve privileges
-	        if (AuthorizationService::allows($me, 'goods_return_approve')) {
+	        if (ModulePrivilege::canApprove($me, 'trx_goods_returns')) {
 	        	$this->button_selected[] = [
 	        		'label' => 'Bulk Approve',
 	        		'icon' => 'fa fa-check',
@@ -538,7 +514,7 @@
 	        //Your code here
 	        if ($button_name == 'bulk_approve') {
 	        	$me = \CB::me();
-	        	if (AuthorizationService::denies($me, 'goods_receipt_approve_strict')) {
+	        	if (ModulePrivilege::deniesApprove($me, 'trx_goods_returns')) {
 	        		\CB::redirect(CRUDBooster::mainpath(), "You don't have permission to approve records!", "warning");
 	        		return;
 	        	}
@@ -824,7 +800,7 @@
 	    public function hook_before_delete($id) {
 	        //Your code here
 			$me = \CB::me();
-			if (AuthorizationService::denies($me, 'transaction_crud')) {
+			if (!CRUDBooster::isDelete() && $this->global_privilege == false) {
 				\CB::redirect(CRUDBooster::mainpath(), "You don't have permission to delete this record!", "warning");
 				exit;
 			}

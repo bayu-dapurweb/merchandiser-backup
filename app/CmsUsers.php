@@ -90,4 +90,9 @@ class CmsUsers extends Model
 
         return $privilege && !empty($privilege->is_superadmin);
     }
+
+    public function can(string $permission): bool
+    {
+        return \App\Services\AuthorizationService::allows($this, $permission);
+    }
 }

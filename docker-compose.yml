@@ -2,7 +2,7 @@ services:
     php:
         image: akhyarmaulana/php73-apache-gd
         ports:
-            - "8019:80"
+            - "8020:80"
         volumes:
             - ./:/var/www/html/
             - ./docker/000-default.conf:/etc/apache2/sites-available/000-default.conf
@@ -13,4 +13,4 @@ networks:
         driver: bridge
         ipam:
           config:
-            - subnet: 172.40.8.0/24
+            - subnet: 172.41.0.0/24

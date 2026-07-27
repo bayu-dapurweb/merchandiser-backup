@@ -323,8 +323,8 @@ class Cms_modulsSeeder extends Seeder
                 'icon' => 'fa fa-cog',
                 'path' => 'privileges',
                 'table_name' => 'cms_privileges',
-                'controller' => 'PrivilegesController',
-                'is_protected' => 1,
+                'controller' => 'AdminPrivilegesController',
+                'is_protected' => 0,
                 'is_active' => 1,
             ],
             [

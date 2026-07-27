@@ -32,12 +32,6 @@ class AdminTrxPurchaseOrdersApprovedController extends \crocodicstudio\crudboost
 		$this->button_import = false;
 		$this->button_export = false;
 		$this->table = "trx_purchase_orders";
-		$me = \CB::me();
-
-		if (AuthorizationService::denies($me, 'super_admin_only')) {
-			$this->button_add = false;
-			$this->button_delete = false;
-		}
 		# END CONFIGURATION DO NOT REMOVE THIS LINE
 
 		# START COLUMNS DO NOT REMOVE THIS LINE
@@ -294,7 +288,8 @@ class AdminTrxPurchaseOrdersApprovedController extends \crocodicstudio\crudboost
 	        */
 
 		$this->addaction = array();
-        if (AuthorizationService::allows($me, 'transaction_crud')) {
+		$me = \CB::me();
+        if (CRUDBooster::isUpdate()) {
             $this->addaction[] = [
                 'label' => 'Sync History',
                 'url' => uri('admin/log_api_calls?related_module=trx_purchase_orders&related_reff_id=[id]'),

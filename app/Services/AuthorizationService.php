@@ -4,40 +4,70 @@ namespace App\Services;
 
 use App\CmsUsers;
 use App\Support\CmsRole;
+use App\Support\ModulePrivilege;
+use App\Support\PermissionResolver;
 use App\Support\Rbac;
 
 class AuthorizationService
 {
     /**
-     * Check whether a user belongs to a configured role group.
-     *
-     * When RBAC is disabled, falls back to legacy numeric privilege IDs
-     * derived from config('rbac.legacy_id_slug_map').
+     * Check whether a user has a named permission.
      */
-    public static function allows($user, string $group): bool
+    public static function allows($user, string $permission): bool
     {
-        $roles = config("rbac.role_groups.{$group}");
-
-        if (!is_array($roles) || empty($roles)) {
+        if (!$user || empty($user->id_cms_privileges)) {
             return false;
         }
 
-        return self::userHasAnyRole($user, $roles);
+        $approvePath = array_search($permission, config('rbac.approve_legacy_permission_map', []), true);
+        if ($approvePath !== false) {
+            return ModulePrivilege::canApprove($user, $approvePath);
+        }
+
+        if (!Rbac::isEnabled()) {
+            return self::allowsViaConfigRoleGroups($user, $permission, true);
+        }
+
+        $cmsUser = self::resolveCmsUser($user);
+        if ($cmsUser && $cmsUser->isSuperAdmin()) {
+            return true;
+        }
+
+        if (Rbac::usesDatabasePermissions()) {
+            return PermissionResolver::privilegeHasPermission((int) $user->id_cms_privileges, $permission);
+        }
+
+        return self::allowsViaConfigRoleGroups($user, $permission, false);
     }
 
-    public static function denies($user, string $group): bool
+    public static function denies($user, string $permission): bool
     {
-        return !self::allows($user, $group);
+        return !self::allows($user, $permission);
+    }
+
+    public static function can($user, string $permission): bool
+    {
+        return self::allows($user, $permission);
     }
 
     public static function isSuperAdmin($user): bool
     {
-        return self::allows($user, 'super_admin_only');
+        if (!$user || empty($user->id_cms_privileges)) {
+            return false;
+        }
+
+        if (!Rbac::isEnabled()) {
+            return in_array((int) $user->id_cms_privileges, self::legacyIdsForRoleSlugs([CmsRole::SUPER_ADMIN]), true);
+        }
+
+        $cmsUser = self::resolveCmsUser($user);
+
+        return $cmsUser ? $cmsUser->isSuperAdmin() : false;
     }
 
     public static function isMerchandiser($user): bool
     {
-        return self::allows($user, 'merchandiser_only');
+        return self::userHasAnyRole($user, [CmsRole::MERCHANDISER]);
     }
 
     public static function userHasRole($user, string $roleSlug): bool
@@ -81,6 +111,23 @@ class AuthorizationService
         }
 
         return array_values(array_unique($ids));
+    }
+
+    public static function allowsViaConfigRoleGroups($user, string $permission, bool $legacyMode): bool
+    {
+        $roles = config("rbac.role_groups.{$permission}");
+
+        if (!is_array($roles) || empty($roles)) {
+            return false;
+        }
+
+        if ($legacyMode) {
+            $legacyIds = self::legacyIdsForRoleSlugs($roles);
+
+            return in_array((int) $user->id_cms_privileges, $legacyIds, true);
+        }
+
+        return self::userHasAnyRole($user, $roles);
     }
 
     private static function resolveCmsUser($user): ?CmsUsers

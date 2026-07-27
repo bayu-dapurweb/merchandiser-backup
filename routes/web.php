@@ -150,3 +150,5 @@ HTML;
     }
     return $msg;
 })->middleware('\crocodicstudio\crudbooster\middlewares\CBBackend');
+
+// asu

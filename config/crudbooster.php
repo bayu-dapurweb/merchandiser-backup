@@ -39,6 +39,16 @@ return [
     // false = legacy CRUDBooster behavior (arbitrary table/column) — local testing only.
     'UPDATE_SINGLE_HARDENING_ENABLED' => env('CB_UPDATE_SINGLE_HARDENING_ENABLED', false),
 
+    // Toggle getDataTable datatable_where hardening via .env (CB_DATATABLE_WHERE_HARDENING_ENABLED).
+    // true  = parse simple conditions with parameter binding (recommended).
+    // false = legacy CRUDBooster behavior (raw whereRaw from request) — local testing only.
+    'DATATABLE_WHERE_HARDENING_ENABLED' => env('CB_DATATABLE_WHERE_HARDENING_ENABLED', false),
+
+    // Toggle import upload hardening via .env (CB_IMPORT_UPLOAD_HARDENING_ENABLED).
+    // true  = MIME/fileinfo + magic-byte validation; store under storage/app/imports (recommended).
+    // false = legacy CRUDBooster behavior (extension-only check; store under uploads) — local testing only.
+    'IMPORT_UPLOAD_HARDENING_ENABLED' => env('CB_IMPORT_UPLOAD_HARDENING_ENABLED', true),
+
     'DEFAULT_THUMBNAIL_WIDTH' => 0,
 
     'DEFEAULT_UPLOAD_MAX_SIZE' => 1000, //in KB

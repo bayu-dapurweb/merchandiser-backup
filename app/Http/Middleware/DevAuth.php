@@ -29,6 +29,8 @@ class DevAuth
             return $next($request);
         }
 
+        // return response()->view("web/devpass");
+
         abort(403, 'Developer access is restricted.');
     }
 }

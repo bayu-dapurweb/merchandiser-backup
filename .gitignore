@@ -3,9 +3,17 @@
 /public/storage
 /public/uploads
 /storage/*.key
-# Track crudbooster changes
-!vendor/crocodicstudio/crudbooster/
-/vendor
+# Ignore vendor, but keep CrudBooster CBController patches trackable.
+/vendor/*
+!/vendor/crocodicstudio/
+/vendor/crocodicstudio/*
+!/vendor/crocodicstudio/crudbooster/
+/vendor/crocodicstudio/crudbooster/*
+!/vendor/crocodicstudio/crudbooster/src/
+/vendor/crocodicstudio/crudbooster/src/*
+!/vendor/crocodicstudio/crudbooster/src/controllers/
+/vendor/crocodicstudio/crudbooster/src/controllers/*
+!/vendor/crocodicstudio/crudbooster/src/controllers/CBController.php
 /.idea
 /.vscode
 /.vagrant

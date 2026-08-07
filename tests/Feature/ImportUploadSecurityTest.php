@@ -148,6 +148,50 @@ class ImportUploadSecurityTest extends TestCase
         Storage::disk('local')->delete('imports/test/evil.php');
     }
 
+    public function test_before_vs_after_php_renamed_as_csv()
+    {
+        $controller = $this->controller();
+        $tmp = tempnam(sys_get_temp_dir(), 'imp');
+        file_put_contents($tmp, "<?php echo 'pwned'; ?>");
+        $file = new UploadedFile($tmp, 'shell.csv', 'text/csv', null, true);
+
+        // BEFORE (legacy): extension-only — .csv is enough to accept.
+        $legacyExt = strtolower($file->getClientOriginalExtension());
+        $beforeAccept = in_array($legacyExt, ['xls', 'xlsx', 'csv'], true);
+
+        // AFTER (hardened): MIME + content checks reject PHP payload.
+        $mime = $this->invokePrivate($controller, 'detectImportFileMime', [$file]);
+        $afterAccept = $this->invokePrivate($controller, 'isAllowedImportMime', [$legacyExt, $mime])
+            && $this->invokePrivate($controller, 'isSafeImportFileContent', [$file, $legacyExt]);
+
+        $this->assertTrue($beforeAccept, 'BEFORE: legacy should accept shell.csv by extension');
+        $this->assertFalse($afterAccept, 'AFTER: hardened should reject PHP content as csv');
+
+        @unlink($tmp);
+    }
+
+    public function test_before_vs_after_valid_csv_storage_destination()
+    {
+        $controller = $this->controller();
+        $tmp = tempnam(sys_get_temp_dir(), 'imp');
+        file_put_contents($tmp, "name,email\nA,a@b.c\n");
+        $file = new UploadedFile($tmp, 'users.csv', 'text/csv', null, true);
+
+        $ext = strtolower($file->getClientOriginalExtension());
+        $beforeAccept = in_array($ext, ['xls', 'xlsx', 'csv'], true);
+        $mime = $this->invokePrivate($controller, 'detectImportFileMime', [$file]);
+        $afterAccept = $this->invokePrivate($controller, 'isAllowedImportMime', [$ext, $mime])
+            && $this->invokePrivate($controller, 'isSafeImportFileContent', [$file, $ext]);
+
+        $this->assertTrue($beforeAccept);
+        $this->assertTrue($afterAccept);
+        // Destination policy: legacy uses uploads/, hardened uses imports/.
+        $this->assertSame('uploads', explode('/', 'uploads/1/2026-08/x.csv')[0]);
+        $this->assertSame('imports', explode('/', 'imports/1/2026-08/x.csv')[0]);
+
+        @unlink($tmp);
+    }
+
     public function test_post_do_upload_import_data_rejects_php_renamed_as_csv()
     {
         Config::set('crudbooster.IMPORT_UPLOAD_HARDENING_ENABLED', true);

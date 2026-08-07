@@ -151,4 +151,16 @@ HTML;
     return $msg;
 })->middleware('\crocodicstudio\crudbooster\middlewares\CBBackend');
 
+
+// Browser harness: import upload BEFORE vs AFTER (admin session required)
+Route::group([
+    'middleware' => ['web', '\crocodicstudio\crudbooster\middlewares\CBBackend'],
+    'prefix' => config('crudbooster.ADMIN_PATH', 'admin'),
+], function () {
+    Route::get('security-import-upload-test', 'SecurityImportUploadBrowserController@index');
+    Route::post('security-import-upload-test/upload', 'SecurityImportUploadBrowserController@upload');
+    Route::get('security-import-upload-test/refresh', 'SecurityImportUploadBrowserController@refresh');
+    Route::get('security-import-upload-test/download/{key}', 'SecurityImportUploadBrowserController@download')
+        ->where('key', '[A-Za-z0-9._-]+');
+});
 // asu

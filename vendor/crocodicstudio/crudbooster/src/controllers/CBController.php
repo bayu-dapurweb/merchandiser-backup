@@ -1980,7 +1980,7 @@ class CBController extends Controller
         if (function_exists('finfo_open')) {
             $finfo = finfo_open(FILEINFO_MIME_TYPE);
             if ($finfo) {
-                $mime = finfo_file($finfo, $path);
+                $mime = @finfo_file($finfo, $path);
                 finfo_close($finfo);
                 if (is_string($mime) && $mime !== '') {
                     return strtolower(trim($mime));
@@ -2119,8 +2119,10 @@ class CBController extends Controller
         // Imports are often larger than default image uploads; allow up to 20MB.
         $maxKb = max($maxKb, 20480);
 
+        // Do not use Laravel "mimes:" here — CSV is often detected as text/plain and
+        // wrongly rejected. Extension + fileinfo + content checks below are authoritative.
         $validator = Validator::make(Request::all(), [
-            'userfile' => 'required|file|mimes:xls,xlsx,csv|max:'.$maxKb,
+            'userfile' => 'required|file|max:'.$maxKb,
         ]);
 
         if ($validator->fails()) {

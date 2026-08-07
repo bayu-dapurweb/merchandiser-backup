@@ -51,7 +51,8 @@ class TestDatatableWhereSecurity extends Command
             ],
             [
                 'title' => 'UNION injection — read cms_users emails',
-                'where' => '1=1) UNION SELECT id, email FROM cms_users -- ',
+                // No ")" — whereRaw is not wrapped in parentheses. "-- " comments out trailing AND/ORDER BY.
+                'where' => '1=1 UNION SELECT id, email FROM cms_users -- ',
                 'before' => 'Response JSON may include cms_users id/email pairs from another table.',
                 'after' => 'HTTP 400 — invalid datatable filter.',
             ],
@@ -106,7 +107,7 @@ class TestDatatableWhereSecurity extends Command
         $cases = [
             ['name' => 'Legitimate: id > 0', 'where' => 'id > 0', 'expect_blocked' => false],
             ['name' => 'Legitimate: is_protected = 0', 'where' => 'is_protected = 0', 'expect_blocked' => false],
-            ['name' => 'UNION SELECT injection', 'where' => '1=1) UNION SELECT id, email FROM cms_users -- ', 'expect_blocked' => true],
+            ['name' => 'UNION SELECT injection', 'where' => '1=1 UNION SELECT id, email FROM cms_users -- ', 'expect_blocked' => true],
             ['name' => 'OR tautology', 'where' => '1=0 OR 1=1', 'expect_blocked' => true],
             ['name' => 'Subquery SELECT', 'where' => 'id IN (SELECT id FROM cms_users)', 'expect_blocked' => true],
             ['name' => 'Unquoted string literal', 'where' => 'name = admin', 'expect_blocked' => true],

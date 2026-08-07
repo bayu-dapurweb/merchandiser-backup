@@ -63,7 +63,7 @@ class DatatableWhereSecurityTest extends TestCase
         try {
             $this->invokePrivate($controller, 'applySafeDatatableWhere', [
                 $query,
-                '1=1) UNION SELECT id, email FROM cms_users -- ',
+                '1=1 UNION SELECT id, email FROM cms_users -- ',
                 'cms_privileges',
             ]);
             $this->fail('Expected HttpException for UNION injection payload');
@@ -127,7 +127,7 @@ class DatatableWhereSecurityTest extends TestCase
             'label' => 'name',
             'fk_name' => 'id',
             'fk_value' => '1',
-            'datatable_where' => '1=1) UNION SELECT id, email FROM cms_users -- ',
+            'datatable_where' => '1=1 UNION SELECT id, email FROM cms_users -- ',
         ]));
 
         $this->assertSame(400, $response->getStatusCode());

@@ -149,7 +149,8 @@ if (! $urlsOnly) {
         ],
         [
             'name' => 'UNION SELECT to read cms_users',
-            'where' => '1=1) UNION SELECT id, email FROM cms_users -- ',
+            // No closing ")" — getDataTable() does whereRaw() without wrapping parentheses.
+            'where' => '1=1 UNION SELECT id, email FROM cms_users -- ',
             'expect_blocked' => true,
         ],
         [
@@ -207,9 +208,11 @@ $attacks = [
     [
         'title' => 'UNION injection — read cms_users via datatable_where',
         'type' => 'attack',
-        'where' => '1=1) UNION SELECT id, email FROM cms_users -- ',
+        // Query shape: WHERE {payload} AND id = ? ORDER BY name
+        // UNION must sit between SELECTs (no extra ")"). Trailing "-- " comments out AND/ORDER BY.
+        'where' => '1=1 UNION SELECT id, email FROM cms_users -- ',
         'before' => 'Injects UNION SELECT; response JSON may include cms_users.id and cms_users.email as select_value/select_label.',
-        'after' => 'HTTP 400 — invalid datatable filter (parentheses, UNION, SELECT blocked).',
+        'after' => 'HTTP 400 — invalid datatable filter (UNION, SELECT, comment blocked).',
     ],
     [
         'title' => 'OR tautology — bypass intended filter',
@@ -255,7 +258,7 @@ echo "  4. Open the same URL — expect HTTP 400.\n\n";
 
 echo "curl (replace COOKIE with your admin session cookie):\n";
 $attackParams = array_merge($baseParams, [
-    'datatable_where' => '1=1) UNION SELECT id, email FROM cms_users -- ',
+    'datatable_where' => '1=1 UNION SELECT id, email FROM cms_users -- ',
 ]);
 $attackUrl = buildDataTableUrl($baseUrl, $adminPath, $module, $attackParams);
 echo "  curl -s -o /dev/null -w \"HTTP %{http_code}\\n\" -b \"COOKIE\" \"".$attackUrl."\"\n\n";

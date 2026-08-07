@@ -1003,7 +1003,7 @@ class CBController extends Controller
         $tablePK = $this->primary_key;
         DB::table($table)->where($tablePK, $id)->update([$column => $value]);
 
-        return redirect()->back()->with(['message_type' => 'success', 'message' => trans('crudbooster.alert_delete_data_success')]);
+        return $this->redirectAfterUpdateSingle();
     }
 
     /**
@@ -1018,7 +1018,26 @@ class CBController extends Controller
         $tablePK = CB::pk($table);
         DB::table($table)->where($tablePK, $id)->update([$column => $value]);
 
-        return redirect()->back()->with(['message_type' => 'success', 'message' => trans('crudbooster.alert_delete_data_success')]);
+        return $this->redirectAfterUpdateSingle();
+    }
+
+    /**
+     * Avoid redirect loops when update-single is opened directly (no Referer).
+     * redirect()->back() would otherwise return to the same URL indefinitely.
+     */
+    private function redirectAfterUpdateSingle()
+    {
+        $message = [
+            'message_type' => 'success',
+            'message' => trans('crudbooster.alert_delete_data_success'),
+        ];
+
+        $referer = Request::server('HTTP_REFERER');
+        if ($referer && stripos($referer, 'update-single') === false) {
+            return redirect($referer)->with($message);
+        }
+
+        return redirect(CRUDBooster::mainpath())->with($message);
     }
 
     /**

